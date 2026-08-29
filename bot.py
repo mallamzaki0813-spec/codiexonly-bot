@@ -9,7 +9,7 @@ GROQ_KEY = os.environ["GROQ_API_KEY"]
 
 app = Flask(__name__)
 
-telegram_app = Application.builder().token(TOKEN).build()
+telegram_app = Application.builder().token(TOKEN).updater(None).build()
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -44,17 +44,16 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
         data = response.json()
 
         if response.status_code != 200:
+            print("GROQ ERROR:", data)
             await update.message.reply_text("❌ AI service error.")
             return
 
         answer = data["choices"][0]["message"]["content"]
         await update.message.reply_text(answer)
 
-    
-       except Exception as e:
-    print("ERROR:", repr(e))
-    await update.message.reply_text(f"❌ Error: {e}")
-  
+    except Exception as e:
+        print("CHAT ERROR:", repr(e))
+        await update.message.reply_text("❌ Something went wrong.")
 
 
 telegram_app.add_handler(CommandHandler("start", start))
@@ -70,12 +69,17 @@ def home():
 
 @app.route("/webhook", methods=["POST"])
 async def webhook():
-    data = request.get_json(force=True)
-    update = Update.de_json(data, telegram_app.bot)
+    try:
+        data = request.get_json()
+        update = Update.de_json(data, telegram_app.bot)
 
-    await telegram_app.process_update(update)
+        await telegram_app.process_update(update)
 
-    return "OK"
+        return "OK", 200
+
+    except Exception as e:
+        print("WEBHOOK ERROR:", repr(e))
+        return "ERROR", 500
 
 
 if __name__ == "__main__":
@@ -92,4 +96,8 @@ if __name__ == "__main__":
             port=port
         )
 
-    asyncio.run(main())
+    asyncio.run(main())               
+        
+   
+
+     
