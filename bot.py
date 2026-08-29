@@ -1,11 +1,19 @@
 import os
 import requests
 from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    MessageHandler,
+    ContextTypes,
+    filters,
+)
 
 TOKEN = os.environ["TELEGRAM_TOKEN"]
 GROQ_KEY = os.environ["GROQ_API_KEY"]
+
 PORT = int(os.environ.get("PORT", 10000))
+WEBHOOK_URL = "https://codiexonly-bot.onrender.com/webhook"
 
 application = Application.builder().token(TOKEN).build()
 
@@ -20,23 +28,23 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "https://api.groq.com/openai/v1/chat/completions",
             headers={
                 "Authorization": f"Bearer {GROQ_KEY}",
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
             },
             json={
                 "model": "openai/gpt-oss-20b",
                 "messages": [
                     {
                         "role": "system",
-                        "content": "You are CØDÌÈXØÑLY, a helpful AI assistant."
+                        "content": "You are CØDÌÈXØÑLY, a helpful AI assistant.",
                     },
                     {
                         "role": "user",
-                        "content": update.message.text
-                    }
+                        "content": update.message.text,
+                    },
                 ],
-                "max_tokens": 500
+                "max_tokens": 500,
             },
-            timeout=60
+            timeout=60,
         )
 
         data = response.json()
@@ -64,8 +72,8 @@ if __name__ == "__main__":
     application.run_webhook(
         listen="0.0.0.0",
         port=PORT,
-        webhook_url=f"https://codiexonly-bot.onrender.com/webhook",
-        secret_token=None
+        url_path="webhook",
+        webhook_url=WEBHOOK_URL,
     )
    
 
