@@ -50,9 +50,11 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
         answer = data["choices"][0]["message"]["content"]
         await update.message.reply_text(answer)
 
-    except Exception as e:
-        print("ERROR:", e)
-        await update.message.reply_text("❌ Something went wrong.")
+    
+       except Exception as e:
+    print("ERROR:", repr(e))
+    await update.message.reply_text(f"❌ Error: {e}")
+  
 
 
 telegram_app.add_handler(CommandHandler("start", start))
