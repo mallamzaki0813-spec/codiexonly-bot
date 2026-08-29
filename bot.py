@@ -68,7 +68,7 @@ def home():
 
 
 @app.route("/webhook", methods=["POST"])
-async def webhook():
+def webhook():
     try:
         data = request.get_json()
         update = Update.de_json(data, telegram_app.bot)
