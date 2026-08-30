@@ -19,6 +19,13 @@ GROQ_KEY = os.environ["GROQ_API_KEY"]
 RELAY_URL = "wss://codiexonly-relay.onrender.com/telegram"
 COMPANION_SECRET = os.environ.get("COMPANION_SECRET", "")
 
+# Your Render Web Service URL.
+# Put this in Render as WEBHOOK_URL.
+WEBHOOK_URL = os.environ["WEBHOOK_URL"]
+
+PORT = int(os.environ.get("PORT", "10000"))
+WEBHOOK_PATH = "/telegram-webhook"
+
 API_URL = "https://api.groq.com/openai/v1/chat/completions"
 MODEL = "openai/gpt-oss-20b"
 
@@ -36,10 +43,14 @@ async def connect_relay():
     global relay_ws
 
     while True:
+        if relay_ws is not None:
+            await asyncio.sleep(5)
+            continue
+
         try:
             print("🔗 Connecting Telegram bot to Android relay...")
 
-            relay_ws = await websockets.connect(
+            ws = await websockets.connect(
                 RELAY_URL,
                 additional_headers={
                     "X-Companion-Secret": COMPANION_SECRET
@@ -49,14 +60,22 @@ async def connect_relay():
                 ping_timeout=20,
             )
 
+            relay_ws = ws
+
             print("🔗 Telegram bot connected to Android relay.")
 
-            while True:
-                await relay_ws.recv()
+            # Keep the connection alive.
+            # IMPORTANT: do not call recv() here.
+            # send_companion_command() receives the command response.
+            while relay_ws is ws:
+                await asyncio.sleep(10)
 
         except Exception as e:
             print("⚠️ Relay connection lost:", type(e).__name__)
-            relay_ws = None
+
+            if relay_ws is ws:
+                relay_ws = None
+
             await asyncio.sleep(5)
 
 
@@ -84,14 +103,16 @@ async def send_companion_command(command):
 
         except Exception as e:
             relay_ws = None
+
             return {
                 "ok": False,
-                "message": str(e)
+                "message": "Android relay connection failed: " + str(e)
             }
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data["history"] = []
+
     await update.message.reply_text(
         "🤖 CØDÌÈXØÑLY AI is online!"
     )
@@ -112,7 +133,12 @@ async def battery(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not result.get("ok"):
         await update.message.reply_text(
             "❌ Battery request failed:\n"
-            + str(result.get("message", result.get("error", "Unknown error")))
+            + str(
+                result.get(
+                    "message",
+                    result.get("error", "Unknown error")
+                )
+            )
         )
         return
 
@@ -174,7 +200,12 @@ async def confirm_call(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text(
             "❌ Call request failed:\n"
-            + str(result.get("message", result.get("error", "Unknown error")))
+            + str(
+                result.get(
+                    "message",
+                    result.get("error", "Unknown error")
+                )
+            )
         )
 
     context.user_data.pop("call_pending", None)
@@ -271,19 +302,6 @@ app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("reset", reset))
 app.add_handler(CommandHandler("battery", battery))
 app.add_handler(CommandHandler("call", call))
-app.add_handler(CommandHandler("confirmcall", confirm_call))
-app.add_handler(CommandHandler("cancelcall", cancel_call))
-
-app.add_handler(
-    MessageHandler(
-        filters.TEXT & ~filters.COMMAND,
-        chat
-    )
-)
-
-print("🤖 CØDÌÈXØÑLY AI is running...")
-
-app.run_polling()
                
         
    
