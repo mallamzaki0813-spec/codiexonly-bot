@@ -10,7 +10,7 @@ from telegram.ext import (
 )
 
 TOKEN = os.environ["TELEGRAM_TOKEN"]
-GROQ_KEY = os.environ["GROQ_API_KEY"]
+GROQ_KEY = os.environ["GROQ_KEY"]
 
 PORT = int(os.environ.get("PORT", 10000))
 WEBHOOK_URL = "https://codiexonly-bot.onrender.com/webhook"
