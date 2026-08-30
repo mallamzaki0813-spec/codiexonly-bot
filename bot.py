@@ -16,7 +16,7 @@ from telegram.ext import (
 TELEGRAM_TOKEN = os.environ["TELEGRAM_TOKEN"]
 GROQ_KEY = os.environ["GROQ_API_KEY"]
 
-RELAY_URL = "wss://android-companion-relay.onrender.com/telegram"
+RELAY_URL = "wss://codiexonly-relay.onrender.com/telegram"
 COMPANION_SECRET = os.environ.get("COMPANION_SECRET", "")
 
 API_URL = "https://api.groq.com/openai/v1/chat/completions"
