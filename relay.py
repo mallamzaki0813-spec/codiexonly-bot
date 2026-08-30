@@ -23,5 +23,6 @@ async def companion(websocket: WebSocket):
         while True:
             message = await websocket.receive_text()
             await websocket.send_text(message)
+
     except WebSocketDisconnect:
         pass
