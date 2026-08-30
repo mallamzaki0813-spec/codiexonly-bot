@@ -21,7 +21,9 @@ COMPANION_SECRET = os.environ.get("COMPANION_SECRET", "")
 
 # Your Render Web Service URL.
 # Put this in Render as WEBHOOK_URL.
-WEBHOOK_URL = os.environ["WEBHOOK_URL"]
+WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
+
+print("WEBHOOK_URL configured:", bool(WEBHOOK_URL))
 
 PORT = int(os.environ.get("PORT", "10000"))
 WEBHOOK_PATH = "/telegram-webhook"
