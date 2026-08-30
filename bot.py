@@ -304,9 +304,9 @@ app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("reset", reset))
 app.add_handler(CommandHandler("battery", battery))
 app.add_handler(CommandHandler("call", call))
-   app.add_handler(CommandHandler("confirmcall", confirm_call))
+app.add_handler(CommandHandler("call", call))
+app.add_handler(CommandHandler("confirmcall", confirm_call))
 app.add_handler(CommandHandler("cancelcall", cancel_call))
-
 app.add_handler(
     MessageHandler(
         filters.TEXT & ~filters.COMMAND,
@@ -318,7 +318,6 @@ print("🤖 CØDÌÈXØÑLY AI is starting in webhook mode...")
 print("🚀 Starting webhook...")
 print(f"🌐 Listening on port {PORT}")
 
-
 if __name__ == "__main__":
     app.run_webhook(
         listen="0.0.0.0",
@@ -326,7 +325,7 @@ if __name__ == "__main__":
         url_path=WEBHOOK_PATH.lstrip("/"),
         webhook_url=WEBHOOK_URL.rstrip("/") + WEBHOOK_PATH,
         drop_pending_updates=True,
-    )            
+    )     
         
    
 
