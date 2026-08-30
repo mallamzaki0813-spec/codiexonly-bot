@@ -1,5 +1,4 @@
-
- import os
+import os
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 
 app = FastAPI()
@@ -25,18 +24,18 @@ async def companion(websocket: WebSocket):
 
     await websocket.accept()
     phone = websocket
-    print("📱 PHONE CONNECTED")
+    print("PHONE CONNECTED")
 
     try:
         while True:
             message = await websocket.receive_text()
-            print("📱 PHONE →", message)
+            print("PHONE ->", message)
 
             if telegram:
                 await telegram.send_text(message)
 
     except WebSocketDisconnect:
-        print("📱 PHONE DISCONNECTED")
+        print("PHONE DISCONNECTED")
     finally:
         if phone is websocket:
             phone = None
@@ -52,18 +51,18 @@ async def telegram_ws(websocket: WebSocket):
 
     await websocket.accept()
     telegram = websocket
-    print("🤖 TELEGRAM BOT CONNECTED")
+    print("TELEGRAM BOT CONNECTED")
 
     try:
         while True:
             message = await websocket.receive_text()
-            print("🤖 TELEGRAM →", message)
+            print("TELEGRAM ->", message)
 
             if phone:
                 await phone.send_text(message)
 
     except WebSocketDisconnect:
-        print("🤖 TELEGRAM DISCONNECTED")
+        print("TELEGRAM DISCONNECTED")
     finally:
         if telegram is websocket:
             telegram = None
