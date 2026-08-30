@@ -2,3 +2,4 @@ python-telegram-bot[webhooks]
 requests
 fastapi
 uvicorn[standard]
+websockets 
