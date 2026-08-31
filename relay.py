@@ -6,7 +6,8 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 app = FastAPI()
 
 SECRET = os.environ.get("COMPANION_SECRET", "")
-
+print("SERVER SECRET LENGTH:", len(SECRET))
+print("SERVER SECRET HASH:", hashlib.sha256(SECRET.strip().encode()).hexdigest())
 phone = None
 telegram = None
 
