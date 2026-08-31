@@ -17,7 +17,8 @@ async def health():
 @app.websocket("/companion")
 async def companion(websocket: WebSocket):
     global phone
-
+    print("COMPANION HANDSHAKE RECEIVED")
+    print("SECRET HEADER PRESENT:", bool(websocket.headers.get("X-Companion-Secret")))
     if websocket.headers.get("X-Companion-Secret") != SECRET:
         await websocket.close(code=1008)
         return
