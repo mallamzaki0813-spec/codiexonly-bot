@@ -1,4 +1,6 @@
 import os
+import hashlib
+
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 
 app = FastAPI()
@@ -11,20 +13,24 @@ telegram = None
 
 @app.get("/")
 async def health():
-    return {"ok": True, "service": "android-companion-relay"}
+    return {
+        "ok": True,
+        "service": "android-companion-relay"
+    }
 
 
 @app.websocket("/companion")
 async def companion(websocket: WebSocket):
     global phone
 
-    incoming = websocket.headers.get("X-Companion-Secret", "")
-
-    import hashlib
+    incoming_secret = websocket.headers.get(
+        "X-Companion-Secret",
+        ""
+    )
 
     print(
         "COMPANION SECRET HASH:",
-        hashlib.sha256(incoming.encode()).hexdigest()
+        hashlib.sha256(incoming_secret.encode()).hexdigest()
     )
 
     print(
@@ -32,39 +38,46 @@ async def companion(websocket: WebSocket):
         hashlib.sha256(SECRET.encode()).hexdigest()
     )
 
-    if incoming != SECRET:
+    print(
+        "SECRET MATCH:",
+        incoming_secret == SECRET
+    )
+
+    if incoming_secret != SECRET:
         await websocket.close(code=1008)
         return
 
     await websocket.accept()
-    phone = websocket
-    print("PHONE CONNECTED")
-    print("COMPANION HANDSHAKE RECEIVED")
-    print("SECRET HEADER PRESENT:", bool(websocket.headers.get("X-Companion-Secret")))
-    if websocket.headers.get("X-Companion-Secret") != SECRET:
-        await websocket.close(code=1008)
-        return
 
-    await websocket.accept()
     phone = websocket
+
     print("PHONE CONNECTED")
 
     try:
         while True:
             message = await websocket.receive_text()
+
             print("PHONE ->", message)
 
             if telegram is not None:
                 try:
                     await telegram.send_text(message)
+
                 except Exception as e:
-                    print("Failed to send result to Telegram:", e)
+                    print(
+                        "Failed to send result to Telegram:",
+                        e
+                    )
 
     except WebSocketDisconnect:
         print("PHONE DISCONNECTED")
 
     except Exception as e:
-        print("PHONE ERROR:", type(e).__name__, str(e))
+        print(
+            "PHONE ERROR:",
+            type(e).__name__,
+            str(e)
+        )
 
     finally:
         if phone is websocket:
@@ -75,21 +88,30 @@ async def companion(websocket: WebSocket):
 async def telegram_ws(websocket: WebSocket):
     global telegram, phone
 
-    incoming_secret = websocket.headers.get("X-Companion-Secret", "")
+    incoming_secret = websocket.headers.get(
+        "X-Companion-Secret",
+        ""
+    )
 
-print("SECRET MATCH:", incoming_secret == SECRET)
+    print(
+        "TELEGRAM SECRET MATCH:",
+        incoming_secret == SECRET
+    )
 
-if incoming_secret != SECRET:
+    if incoming_secret != SECRET:
         await websocket.close(code=1008)
         return
 
     await websocket.accept()
+
     telegram = websocket
+
     print("TELEGRAM BOT CONNECTED")
 
     try:
         while True:
             message = await websocket.receive_text()
+
             print("TELEGRAM ->", message)
 
             if phone is None:
@@ -100,9 +122,15 @@ if incoming_secret != SECRET:
 
             try:
                 await phone.send_text(message)
+
             except Exception as e:
-                print("Failed to send command to phone:", e)
+                print(
+                    "Failed to send command to phone:",
+                    e
+                )
+
                 phone = None
+
                 await websocket.send_text(
                     '{"ok": false, "message": "Failed to reach Android Companion."}'
                 )
@@ -111,7 +139,11 @@ if incoming_secret != SECRET:
         print("TELEGRAM DISCONNECTED")
 
     except Exception as e:
-        print("TELEGRAM ERROR:", type(e).__name__, str(e))
+        print(
+            "TELEGRAM ERROR:",
+            type(e).__name__,
+            str(e)
+        )
 
     finally:
         if telegram is websocket:
