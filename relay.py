@@ -10,7 +10,7 @@ telegram = None
 
 
 @app.get("/")
-def health():
+async def health():
     return {"ok": True, "service": "android-companion-relay"}
 
 
@@ -31,11 +31,18 @@ async def companion(websocket: WebSocket):
             message = await websocket.receive_text()
             print("PHONE ->", message)
 
-            if telegram:
-                await telegram.send_text(message)
+            if telegram is not None:
+                try:
+                    await telegram.send_text(message)
+                except Exception as e:
+                    print("Failed to send result to Telegram:", e)
 
     except WebSocketDisconnect:
         print("PHONE DISCONNECTED")
+
+    except Exception as e:
+        print("PHONE ERROR:", type(e).__name__, str(e))
+
     finally:
         if phone is websocket:
             phone = None
@@ -58,11 +65,27 @@ async def telegram_ws(websocket: WebSocket):
             message = await websocket.receive_text()
             print("TELEGRAM ->", message)
 
-            if phone:
+            if phone is None:
+                await websocket.send_text(
+                    '{"ok": false, "message": "Android Companion is not connected."}'
+                )
+                continue
+
+            try:
                 await phone.send_text(message)
+            except Exception as e:
+                print("Failed to send command to phone:", e)
+                phone = None
+                await websocket.send_text(
+                    '{"ok": false, "message": "Failed to reach Android Companion."}'
+                )
 
     except WebSocketDisconnect:
         print("TELEGRAM DISCONNECTED")
+
+    except Exception as e:
+        print("TELEGRAM ERROR:", type(e).__name__, str(e))
+
     finally:
         if telegram is websocket:
             telegram = None
