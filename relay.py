@@ -75,7 +75,11 @@ async def companion(websocket: WebSocket):
 async def telegram_ws(websocket: WebSocket):
     global telegram, phone
 
-    if websocket.headers.get("X-Companion-Secret") != SECRET:
+    incoming_secret = websocket.headers.get("X-Companion-Secret", "")
+
+print("SECRET MATCH:", incoming_secret == SECRET)
+
+if incoming_secret != SECRET:
         await websocket.close(code=1008)
         return
 
