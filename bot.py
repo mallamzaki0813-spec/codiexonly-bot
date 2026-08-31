@@ -45,9 +45,7 @@ async def connect_relay():
     global relay_ws
 
     while True:
-        if relay_ws is not None:
-            await asyncio.sleep(5)
-            continue
+        ws = None
 
         try:
             print("🔗 Connecting Telegram bot to Android relay...")
@@ -66,16 +64,13 @@ async def connect_relay():
 
             print("🔗 Telegram bot connected to Android relay.")
 
-            # Keep the connection alive.
-            # IMPORTANT: do not call recv() here.
-            # send_companion_command() receives the command response.
             while relay_ws is ws:
                 await asyncio.sleep(10)
 
         except Exception as e:
-            print("⚠️ Relay connection lost:", type(e).__name__)
+            print("⚠️ Relay connection lost:", type(e).__name__, str(e))
 
-            if relay_ws is ws:
+            if ws is not None and relay_ws is ws:
                 relay_ws = None
 
             await asyncio.sleep(5)
